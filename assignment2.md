@@ -133,17 +133,17 @@ TableRace %>%
         # create a new variable with the total number of women by race
         mutate(total = sum(n)) %>%
         # create a new variable with the required probabilities 
-        mutate(prop = n / total)
+        mutate(probability = n / total)
 ```
 
     ## # A tibble: 4 x 5
     ## # Groups:   egoRace [2]
-    ##   egoRace   alterRace     n total   prop
-    ##   <chr>     <chr>     <int> <int>  <dbl>
-    ## 1 non-White non-White  1790  2116 0.846 
-    ## 2 non-White White       326  2116 0.154 
-    ## 3 White     non-White   266  9960 0.0267
-    ## 4 White     White      9694  9960 0.973
+    ##   egoRace   alterRace     n total probability
+    ##   <chr>     <chr>     <int> <int>       <dbl>
+    ## 1 non-White non-White  1790  2116      0.846 
+    ## 2 non-White White       326  2116      0.154 
+    ## 3 White     non-White   266  9960      0.0267
+    ## 4 White     White      9694  9960      0.973
 
 Join with household data and calculate mean and median number of children by ethnic group (30 points)
 -----------------------------------------------------------------------------------------------------
@@ -154,28 +154,38 @@ Join with household data and calculate mean and median number of children by eth
 4.  Write a short interpretation of your results. What could affect your findings?
 
 ``` r
+# recode Hh8 to make it easier
 Hhk8 <- Hh8 %>%
   select(h_hidp, h_nkids_dv)
 
-
+# Join individual-level file to household-level data
 JoinedEthn2 <- JoinedEthn  %>%
   left_join(Hhk8, by = "h_hidp")
 
+# Filter only ethically endogamous couples
 JoinedEthn2 <- JoinedEthn2 %>%
   filter(egoRacel_dv == 1 & alterRacel_dv == 1 | egoRacel_dv == 9 & alterRacel_dv == 9 | egoRacel_dv == 10 & alterRacel_dv == 10)
- 
+
+# Recode to form a race catagory for easier understanding
 JoinedEthn2 <- JoinedEthn2 %>%
   mutate(race = recode(egoRacel_dv,
                 `1` = "White British",
                 `9` = "Indian",
                 `10` = "Pakistani"))
-   
-TableKids <- JoinedEthn2 %>%
-       count(race, h_nkids_dv)
 
-TableKids <- TableKids %>%
+# Make a table for the number of children and edit the table to find mean and median
+TableKids <- JoinedEthn2 %>%
   group_by(race) %>%
   summarise(mean = mean(h_nkids_dv, na.rm = TRUE), median = median(h_nkids_dv, na.rm = TRUE))
+
+TableKids
 ```
 
-The results show that the average number of children for White British and Indian parents is 4 (3.5 rounded) and the average number of children for Pakistani households is 3. However, many factors could affect this outcome. We removed missing values which could have skewed the result in a certain direction. There also could be a problem with the sample as certain people are selected, with the potential for non-response bias, and people may have dropped out of the study later on or misreport the number of children they have. Same-sex parents are also excluded from this table which could impact the results. Therefore, the results may not represent the actual number of children each race has particularly as many sources indicate the average number of children per family is considerably lower.
+    ## # A tibble: 3 x 3
+    ##   race           mean median
+    ##   <chr>         <dbl>  <dbl>
+    ## 1 Indian        0.955      1
+    ## 2 Pakistani     1.81       2
+    ## 3 White British 0.565      0
+
+The results show that the average number of children for White British is 0.5651314 (therefore 1 if you round up) with the median is 0 suggesting that the number of children per household is fairly low for White British parents. For Indian parents the mean is 0.9553753 (therefore 1 if you round up) and the median is 1. This suggest the number of children for Indian parents is larger than White British parents. However Pakistani households have a larger number of children with a mean of 1.8108747 (therefore 2 if you round up) and the median is 2. This suggests the Pakistani families have the largest number of children when compared to White British families (with the least) and Indian families. However, many factors could affect this outcome. We removed missing values which could have skewed the result in a certain direction. There also could be a problem with the sample as certain people are selected, with the potential for non-response bias, and people may have dropped out of the study later on or misreport the number of children they have. Same-sex parents are also excluded from this table which could impact the results. Therefore, the results may not represent the actual number of children each race.

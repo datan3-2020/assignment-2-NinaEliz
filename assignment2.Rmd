@@ -136,7 +136,7 @@ TableRace %>%
         # create a new variable with the total number of women by race
         mutate(total = sum(n)) %>%
         # create a new variable with the required probabilities 
-        mutate(prop = n / total)
+        mutate(probability = n / total)
 ```
 
 ## Join with household data and calculate mean and median number of children by ethnic group (30 points)
@@ -147,30 +147,34 @@ TableRace %>%
 4) Write a short interpretation of your results. What could affect your findings?
 
 ```{r}
-
+# recode Hh8 to make it easier
 Hhk8 <- Hh8 %>%
   select(h_hidp, h_nkids_dv)
 
-
+# Join individual-level file to household-level data
 JoinedEthn2 <- JoinedEthn  %>%
   left_join(Hhk8, by = "h_hidp")
 
+# Filter only ethically endogamous couples
 JoinedEthn2 <- JoinedEthn2 %>%
   filter(egoRacel_dv == 1 & alterRacel_dv == 1 | egoRacel_dv == 9 & alterRacel_dv == 9 | egoRacel_dv == 10 & alterRacel_dv == 10)
- 
+
+# Recode to form a race catagory for easier understanding
 JoinedEthn2 <- JoinedEthn2 %>%
   mutate(race = recode(egoRacel_dv,
                 `1` = "White British",
                 `9` = "Indian",
                 `10` = "Pakistani"))
-   
-TableKids <- JoinedEthn2 %>%
-       count(race, h_nkids_dv)
 
-TableKids <- TableKids %>%
+# Make a table for the number of children and edit the table to find mean and median
+TableKids <- JoinedEthn2 %>%
   group_by(race) %>%
   summarise(mean = mean(h_nkids_dv, na.rm = TRUE), median = median(h_nkids_dv, na.rm = TRUE))
 
+TableKids
+
 ``` 
 
-The results show that the average number of children for White British and Indian parents is 4 (3.5 rounded) and the average number of children for Pakistani households is 3. However, many factors could affect this outcome. We removed missing values which could have skewed the result in a certain direction. There also could be a problem with the sample as certain people are selected, with the potential for non-response bias, and people may have dropped out of the study later on or misreport the number of children they have. Same-sex parents are also excluded from this table which could impact the results. Therefore, the results may not represent the actual number of children each race has particularly as many sources indicate the average number of children per family is considerably lower.
+The results show that the average number of children for White British is 0.5651314 (therefore 1 if you round up) with the median is 0 suggesting that the number of children per household is fairly low for White British parents. For Indian parents the mean is 0.9553753 (therefore 1 if you round up) and the median is 1. This suggest the number of children for Indian parents is larger than White British parents. However Pakistani households have a larger number of children with a mean of 1.8108747 (therefore 2 if you round up) and the median is 2. This suggests the Pakistani families have the largest number of children when compared to White British families (with the least) and Indian families.
+However, many factors could affect this outcome. We removed missing values which could have skewed the result in a certain direction. There also could be a problem with the sample as certain people are selected, with the potential for non-response bias, and people may have dropped out of the study later on or misreport the number of children they have. Same-sex parents are also excluded from this table which could impact the results. Therefore, the results may not represent the actual number of children each race.
+
